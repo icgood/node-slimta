@@ -1,0 +1,20 @@
+{
+  "author": "Ian Good <icgood@gmail.com> (http://icgood.net/)",
+  "name": "slimta",
+  "description": "Libraries to build a full-featured, scalable email MTA.",
+  "version": "0.0.0",
+  "homepage": "http://slimta.org/",
+  "repository": {
+    "url": ""
+  },
+  "main": "lib/slimta.js",
+  "scripts": {
+    "test": "vows --spec test/*"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}

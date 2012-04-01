@@ -238,6 +238,38 @@ vows.describe("smtp commands").addBatch({
         },
     },
 
+    'the buildFromCommands function': {
+        'with just an array of Command objects': {
+            topic: commands.buildFromCommands([new commands.Banner(),
+                                               new commands.Ehlo('there'),
+                                               new commands.Mail('test1@address'),
+                                               new commands.Rcpt('test2@address'),
+                                               new commands.Data(),
+                                               new commands.SendData('test\none\r\ntwo'),
+                                               new commands.Quit()]),
+    
+            'has the correct result': function (topic) {
+                expected = "EHLO there\r\nMAIL FROM:<test1@address>\r\nRCPT TO:<test2@address>\r\nDATA\r\ntest\none\r\ntwo\r\n.\r\nQUIT\r\n";
+                assert.equal(topic, expected);
+            },
+        },
+
+        'with an array of Command objects and a range': {
+            topic: commands.buildFromCommands([new commands.Banner(),
+                                               new commands.Ehlo('there'),
+                                               new commands.Mail('test1@address'),
+                                               new commands.Rcpt('test2@address'),
+                                               new commands.Data(),
+                                               new commands.SendData('test\none\r\ntwo'),
+                                               new commands.Quit()], 2, 4),
+    
+            'has the correct result': function (topic) {
+                expected = "MAIL FROM:<test1@address>\r\nRCPT TO:<test2@address>\r\n";
+                assert.equal(topic, expected);
+            },
+        },
+    },
+
     'the InvalidSyntax constructor': {
         topic: new commands.InvalidSyntax('bad/command'),
 
@@ -251,6 +283,14 @@ vows.describe("smtp commands").addBatch({
 
         'has line property': function (topic) {
             assert.equal(topic.line, 'bad/command');
+        },
+    },
+
+    'the Banner constructor': {
+        topic: new commands.Banner(),
+
+        'inherits Command': function (topic) {
+            assert.ok(topic instanceof commands.Command);
         },
     },
 
@@ -397,7 +437,6 @@ vows.describe("smtp commands").addBatch({
             assert.equal(topic.toString(), "QUIT");
         },
     },
-
 }).export(module);
 
 // vim:et:sw=4:ts=4:sts=4:

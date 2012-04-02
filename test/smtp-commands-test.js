@@ -268,6 +268,15 @@ vows.describe("smtp commands").addBatch({
                 assert.equal(topic, expected);
             },
         },
+
+        'with an empty SendData command': {
+            topic: commands.buildFromCommands([new commands.Data(), new commands.SendData('')]),
+
+            'does not have a newline before the period': function (topic) {
+                expected = "DATA\r\n.\r\n";
+                assert.equal(topic, expected);
+            },
+        },
     },
 
     'the InvalidSyntax constructor': {

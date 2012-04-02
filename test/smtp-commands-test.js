@@ -132,11 +132,24 @@ vows.describe("smtp commands").addBatch({
             },
         },
 
+        'given partial message data': {
+            topic: commands.parseIntoCommands('DATA\npartial\ndata\n'),
+
+            'returns just a Data object': function (topic) {
+                assert.equal(topic.commands.length, 1);
+                assert.ok(topic.commands[0] instanceof commands.Data);
+            },
+
+            'message data is not interpreted as commands': function (topic) {
+                assert.equal(topic.remainder, "partial\ndata\n");
+            },
+        },
+
         'given all known commands': {
-            topic: commands.parseIntoCommands('EHLO there1\nHELO there2\nSTARTTLS\nMAIL FROM:<test1@address>\nRCPT TO:<test2@address>\nDATA\nRSET\nQUIT\n'),
+            topic: commands.parseIntoCommands('EHLO there1\nHELO there2\nSTARTTLS\nMAIL FROM:<test1@address>\nRCPT TO:<test2@address>\nDATA\nmessage data\n.\nRSET\nQUIT\n'),
 
             'returns eight commands and a string remainder': function (topic) {
-                assert.equal(topic.commands.length, 8);
+                assert.equal(topic.commands.length, 9);
                 assert.equal(topic.remainder, '');
             },
 
@@ -174,13 +187,19 @@ vows.describe("smtp commands").addBatch({
                 assert.ok(cmd instanceof commands.Data);
             },
 
-            'returns a Rset object at index 6': function (topic) {
+            'returns a SendData object at index 6': function (topic) {
                 var cmd = topic.commands[6];
+                assert.ok(cmd instanceof commands.SendData);
+                assert.equal(cmd.data, "message data");
+            },
+
+            'returns a Rset object at index 7': function (topic) {
+                var cmd = topic.commands[7];
                 assert.ok(cmd instanceof commands.Rset);
             },
 
-            'returns a Quit object at index 7': function (topic) {
-                var cmd = topic.commands[7];
+            'returns a Quit object at index 8': function (topic) {
+                var cmd = topic.commands[8];
                 assert.ok(cmd instanceof commands.Quit);
             },
 

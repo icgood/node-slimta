@@ -2,35 +2,18 @@
 var vows = require("vows"),
     assert = require("assert");
 
-var client = require("../lib/smtp/client"),
-    commands = client.commands,
-    replies = client.replies;
+var RawClient = require("../lib/smtp/rawclient").RawClient,
+    commands = require("../lib/smtp/commands"),
+    replies = require("../lib/smtp/replies");
 
 var mocksmtp = require("./helpers/mock-smtp");
 
 vows.describe("smtp client").addBatch({
-    'exports': {
-        topic: client,
-
-        'the Client constructor': function (topic) {
-            assert.ok(topic.Client);
-        },
-
-        'the commands module': function (topic) {
-            assert.equal(topic.commands, require("../lib/smtp/commands"));
-        },
-
-        'the replies module': function (topic) {
-            assert.equal(topic.replies, require("../lib/smtp/replies"));
-        },
-
-    },
-
-    'the Client constructor': {
+    'the RawClient constructor': {
         'given only the implied Banner command': {
             topic: function () {
                 var mock = new mocksmtp.MockSmtpServer([], ["220 Welcome\r\n"]);
-                var topic = new client.Client(mock, mock);
+                var topic = new RawClient(mock, mock);
                 topic.on('end', this.callback);
                 mock.start();
             },
@@ -63,7 +46,7 @@ vows.describe("smtp client").addBatch({
         'sent an additional Ehlo command': {
             topic: function () {
                 var mock = new mocksmtp.MockSmtpServer(["EHLO there\r\n"], ["220 Welcome\r\n", "250-Extensions\r\n250-and\r\n250 stuff\r\n"]);
-                var topic = new client.Client(mock, mock);
+                var topic = new RawClient(mock, mock);
                 topic.on('end', this.callback);
                 mock.start();
                 topic.sendCommand(new commands.Ehlo("there"));
@@ -107,7 +90,7 @@ vows.describe("smtp client").addBatch({
                          "250 Sender accepted\r\n250 Recipient accepted\r\n354 Send your Data!\r\n",
                          "250 Message accepted\r\n221 Quitting\r\n",]
                     );
-                var topic = new client.Client(mock, mock);
+                var topic = new RawClient(mock, mock);
                 topic.on('end', this.callback);
                 mock.start();
                 topic.sendCommand(new commands.Ehlo("there"));

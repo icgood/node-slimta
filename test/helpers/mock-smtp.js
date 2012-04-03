@@ -1,33 +1,43 @@
 
 var util = require("util"),
-    events = require("events"),
-    assert = require("assert");
+  events = require("events"),
+  assert = require("assert");
 
-function MockSmtpServer(expects, replies) {
-    events.EventEmitter.call(this);
-    this.expects = expects;
-    this.replies = replies;
+function MockSmtpServer(expects, replies, debug) {
+  events.EventEmitter.call(this);
+  this.expects = expects;
+  this.replies = replies;
+  this.debug = debug;
 }
 util.inherits(MockSmtpServer, events.EventEmitter);
 
 function flushReplies(self) {
-    while (self.replies.length > self.expects.length) {
-        var reply = self.replies.shift();
-        self.emit("data", reply);
+  while (self.replies.length > self.expects.length) {
+    var reply = self.replies.shift();
+    if (self.debug) {
+      console.log("S: [["+reply+"]]");
     }
-    if (self.replies.length === 0) {
-        self.emit("end");
-    }
+    self.emit("data", reply);
+  }
+  if (self.replies.length === 0) {
+    self.emit("end");
+  }
 }
 
 MockSmtpServer.prototype.start = function () {
-    flushReplies(this);
+  var self = this;
+  process.nextTick(function () {
+    flushReplies(self);
+  });
 };
 
 MockSmtpServer.prototype.write = function (str) {
-    var expected = this.expects.shift();
-    assert.equal(str, expected);
-    flushReplies(this);
+  if (this.debug) {
+    console.log("C: [["+str+"]]");
+  }
+  var expected = this.expects.shift();
+  assert.equal(str, expected);
+  flushReplies(this);
 };
 
 MockSmtpServer.prototype.destroy = function () {
@@ -36,4 +46,4 @@ MockSmtpServer.prototype.destroy = function () {
 
 exports.MockSmtpServer = MockSmtpServer;
 
-// vim:et:sw=4:ts=4:sts=4:
+// vim:et:sw=2:ts=2:sts=2:

@@ -20,6 +20,9 @@ function flushReplies(self) {
     self.emit("data", reply);
   }
   if (self.replies.length === 0) {
+    if (self.debug) {
+      console.log("S: end");
+    }
     self.emit("end");
   }
 }

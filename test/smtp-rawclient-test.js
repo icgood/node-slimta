@@ -72,7 +72,7 @@ vows.describe('smtp raw client').addBatch({
         assert.equal(stack[1].reply.message, 'Extensions\r\nand\r\nstuff');
       },
     },
- 
+
     'given an entire SMTP session': {
       'without pipelining': {
         topic: function () {

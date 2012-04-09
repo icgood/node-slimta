@@ -136,11 +136,11 @@ vows.describe('smtp client').addBatch({
       },
     },
 
-    'given two messages with pipelining and shared writeHead': {
+    'given a single message in two parts': {
       topic: function () {
         var mock = new mocksmtp.MockSmtpServer(
-            ['EHLO test\r\n', 'MAIL FROM:<sender>\r\nRCPT TO:<rcpt>\r\nDATA\r\n', 'message contents\r\n.\r\nMAIL FROM:<sender>\r\nRCPT TO:<rcpt>\r\nDATA\r\n', 'message contents 2\r\n.\r\nQUIT\r\n'],
-            ['220 Welcome\r\n', '250-Hello\r\n250 PIPELINING\r\n', '250 Ok\r\n250 Ok\r\n354 Go ahead\r\n', '250 Accepted\r\n250 Ok\r\n250 Ok\r\n354 Go ahead\r\n', '250 Accepted\r\n221 Goodbye\r\n']
+            ['EHLO test\r\n', 'MAIL FROM:<sender>\r\nRCPT TO:<rcpt>\r\nDATA\r\n', 'line one\r\nline two\r\n.\r\nQUIT\r\n'],
+            ['220 Welcome\r\n', '250-Hello\r\n250 PIPELINING\r\n', '250 Ok\r\n250 Ok\r\n354 Go ahead\r\n', '250 Accepted\r\n221 Goodbye\r\n']
           );
         var self = this, i = 0;
         var req = smtp.request({stream: mock, ehlo: 'test'}, function (reply, command) {
@@ -153,8 +153,8 @@ vows.describe('smtp client').addBatch({
         });
         mock.start();
         req.writeHead("sender", ["rcpt"]);
-        req.write("message contents");
-        req.end("message contents 2");
+        req.write("line one\r\n");
+        req.end("line two");
       },
 
       'sends a message response': function (i) {

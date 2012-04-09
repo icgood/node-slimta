@@ -203,6 +203,74 @@ vows.describe('smtp raw client').addBatch({
         },
       },
     },
+
+    'using message data stream': {
+      'given empty message data': {
+        topic: function () {
+          var mock = new mocksmtp.MockSmtpServer(['DATA\r\n', '.\r\n'], ['220 Welcome\r\n', '354 Go Ahead\r\n', '250 Ok\r\n']);
+          var topic = new RawClient(mock);
+          mock.start();
+          topic.sendCommand(new commands.Data());
+          topic.startMessageData().end();
+  
+          var stack = [];
+          topic.on('reply', function (reply, command) {
+            stack.push({reply: reply, command: command});
+          });
+  
+          var self = this;
+          topic.on('end', function () {
+            self.callback(null, stack);
+          });
+        },
+  
+        'contains Data and SendData commands': function (stack) {
+          assert.equal(stack.length, 3);
+          assert.ok(stack[1].command instanceof commands.Data);
+          assert.ok(stack[2].command instanceof commands.SendData);
+        },
+  
+        'contains SendData reply': function (stack) {
+          assert.equal(stack.length, 3);
+          assert.equal(stack[2].reply.code, '250');
+          assert.equal(stack[2].reply.message, 'Ok');
+        },
+      },
+
+      'given message data in parts': {
+        topic: function () {
+          var mock = new mocksmtp.MockSmtpServer(['DATA\r\n', 'line one\r\nline two\r\n.\r\n'], ['220 Welcome\r\n', '354 Go Ahead\r\n', '250 Ok\r\n']);
+          var topic = new RawClient(mock);
+          mock.start();
+          topic.sendCommand(new commands.Data());
+          var msg = topic.startMessageData();
+          msg.write('line one\r\n');
+          msg.end('line two');
+  
+          var stack = [];
+          topic.on('reply', function (reply, command) {
+            stack.push({reply: reply, command: command});
+          });
+  
+          var self = this;
+          topic.on('end', function () {
+            self.callback(null, stack);
+          });
+        },
+  
+        'contains Data and SendData commands': function (stack) {
+          assert.equal(stack.length, 3);
+          assert.ok(stack[1].command instanceof commands.Data);
+          assert.ok(stack[2].command instanceof commands.SendData);
+        },
+  
+        'contains SendData reply': function (stack) {
+          assert.equal(stack.length, 3);
+          assert.equal(stack[2].reply.code, '250');
+          assert.equal(stack[2].reply.message, 'Ok');
+        },
+      },
+    },
   },
 }).export(module);
 

@@ -143,22 +143,16 @@ vows.describe('smtp client').addBatch({
             ['220 Welcome\r\n', '250-Hello\r\n250 PIPELINING\r\n', '250 Ok\r\n250 Ok\r\n354 Go ahead\r\n', '250 Accepted\r\n221 Goodbye\r\n']
           );
         var self = this, i = 0;
-        var req = smtp.request({stream: mock, ehlo: 'test'}, function (reply, command) {
-          assert.equal(reply.code, "250");
-          assert.equal(reply.message, "Accepted");
-          i++;
-        });
-        req.on('end', function () {
-          self.callback(null, i); 
-        });
+        var req = smtp.request({stream: mock, ehlo: 'test'}, this.callback);
         mock.start();
         req.writeHead("sender", ["rcpt"]);
         req.write("line one\r\n");
         req.end("line two");
       },
 
-      'sends a message response': function (i) {
-        assert.equal(i, 2);
+      'sends a message response': function (reply, command) {
+        assert.equal(reply.code, "250");
+        assert.equal(reply.message, "Accepted");
       },
     },
 
